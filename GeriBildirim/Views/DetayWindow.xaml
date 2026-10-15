@@ -1,0 +1,69 @@
+﻿<Window x:Class="GeriBildirim.Views.DetayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Style="{StaticResource {x:Type Window}}"
+        Title="Geri Bildirim Detayı"
+        Width="640" Height="520"
+        MinWidth="480" MinHeight="380"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ÜST BİLGİLER -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Kullanıcı" Style="{StaticResource Etiket}" Margin="0,0,0,8" />
+            <TextBlock x:Name="KullaniciText" Grid.Row="0" Grid.Column="1" Margin="0,0,12,8" TextWrapping="Wrap" />
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="Tarih" Style="{StaticResource Etiket}" Margin="0,0,0,8" />
+            <TextBlock x:Name="TarihText" Grid.Row="0" Grid.Column="3" Margin="0,0,0,8" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Modül" Style="{StaticResource Etiket}" Margin="0,0,0,8" />
+            <TextBlock x:Name="ModulText" Grid.Row="1" Grid.Column="1" Margin="0,0,12,8" TextWrapping="Wrap" />
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="Sayfa" Style="{StaticResource Etiket}" Margin="0,0,0,8" />
+            <TextBlock x:Name="SayfaText" Grid.Row="1" Grid.Column="3" Margin="0,0,0,8" TextWrapping="Wrap" />
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Durum" Style="{StaticResource Etiket}" />
+            <TextBlock x:Name="DurumText" Grid.Row="2" Grid.Column="1" FontWeight="SemiBold" />
+        </Grid>
+
+        <TextBlock Grid.Row="1"
+                   Margin="0,16,0,6"
+                   Text="Bildirim İçeriği"
+                   Style="{StaticResource Etiket}" />
+
+        <!-- BİLDİRİM METNİ -->
+        <TextBox x:Name="IcerikText"
+                 Grid.Row="2"
+                 IsReadOnly="True"
+                 TextWrapping="Wrap"
+                 AcceptsReturn="True"
+                 VerticalScrollBarVisibility="Auto"
+                 VerticalContentAlignment="Top"
+                 Padding="10"
+                 Background="{StaticResource YuzeyBrush}" />
+
+        <Button Grid.Row="3"
+                Margin="0,16,0,0"
+                HorizontalAlignment="Right"
+                Content="Kapat"
+                IsCancel="True"
+                IsDefault="True" />
+    </Grid>
+</Window>

@@ -1,0 +1,42 @@
+[
+  {
+    "modul": "Anasayfa",
+    "sayfalar": [ "Anasayfa" ]
+  },
+  {
+    "modul": "Araçlar",
+    "sayfalar": [ "Araç Takip", "Dosya Birleştir", "Personel İzin Formu", "Tarih Hesaplama", "Telefon Rehberi", "Toplantı Kayıt", "Ziyaretçi Kayıt" ]
+  },
+  {
+    "modul": "Belge Takip",
+    "sayfalar": [ "Belge Giriş", "Ceza Ekle", "Firma Detay", "İstatistik", "Firma Kayıt", "Takipteki Firmalar", "Tebliğ", "Tüm Firmalar Listesi" ]
+  },
+  {
+    "modul": "CİMER",
+    "sayfalar": [ "Başvuru Yaz", "Biten Başvuru", "Havale Cevapla", "İncelenen", "İstatistik", "Başvuru Kayıt", "Başvuru Onay", "Başvuru Raporlama", "Tanımlamalar" ]
+  },
+  {
+    "modul": "CİMER-ESKİ",
+    "sayfalar": [ "Genel Sayfalar" ]
+  },
+  {
+    "modul": "Denetim",
+    "sayfalar": [ "İşletme Giriş", "İşletme Rapor", "Taşıt Giriş", "Taşıt Rapor", "Dersane Denetim Giriş", "Dersane Denetim Rapor" ]
+  },
+  {
+    "modul": "Görev Takip",
+    "sayfalar": [ "Görevlendirme", "Personel Görev Rapor", "Talep Ekle", "Talep Rapor" ]
+  },
+  {
+    "modul": "Tehlikeli Madde",
+    "sayfalar": [ "Firma Kayıt", "Firma Rapor", "İstatistik", "Tanımlamalar" ]
+  },
+  {
+    "modul": "Personel",
+    "sayfalar": [ "Personel Detay", "Personel Liste", "Istatistik", "İzin Ekle", "İzin Rapor", "Personel Kayıt", "Öğrenim Ekle", "İzin Raporlama", "Tanımlamalar" ]
+  },
+  {
+    "modul": "Yönetim",
+    "sayfalar": [ "Duyurular", "Kullanıcı İşlem", "Kullanıcı Yönetim", "Yetki İşlem", "Ziyaretçi Defteri" ]
+  }
+]

@@ -1,0 +1,109 @@
+﻿<UserControl x:Class="GeriBildirim.Views.GonderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Border Width="720"
+                Margin="24"
+                Padding="28,24"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Background="{StaticResource YuzeyBrush}"
+                BorderBrush="{StaticResource KenarBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
+                           Text="Geri Bildirim Formu"
+                           FontSize="16"
+                           FontWeight="SemiBold" />
+
+                <TextBlock Grid.Row="1" Grid.ColumnSpan="2"
+                           Margin="0,4,0,22"
+                           Text="Kullandığınız sayfalarda yapmamızı istediğiniz değişiklikleri bize iletebilirsiniz."
+                           Foreground="{StaticResource MetinSolukBrush}" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0"
+                           Text="Modül *"
+                           Style="{StaticResource Etiket}" />
+                <ComboBox x:Name="ModulCombo"
+                          Grid.Row="2" Grid.Column="1"
+                          Margin="0,0,0,12"
+                          SelectionChanged="ModulCombo_SelectionChanged" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0"
+                           Text="Sayfa *"
+                           Style="{StaticResource Etiket}" />
+                <ComboBox x:Name="SayfaCombo"
+                          Grid.Row="3" Grid.Column="1"
+                          Margin="0,0,0,12"
+                          IsEnabled="False"
+                          SelectionChanged="SayfaCombo_SelectionChanged" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0"
+                           Margin="0,6,0,0"
+                           VerticalAlignment="Top"
+                           Text="Bildiriminiz *"
+                           Style="{StaticResource Etiket}" />
+                <TextBox x:Name="BildirimText"
+                         Grid.Row="4" Grid.Column="1"
+                         Height="200"
+                         MaxLength="3000"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         VerticalContentAlignment="Top"
+                         TextChanged="BildirimText_TextChanged" />
+
+                <TextBlock x:Name="SayacText"
+                           Grid.Row="5" Grid.Column="1"
+                           Margin="0,4,0,0"
+                           HorizontalAlignment="Right"
+                           FontSize="12"
+                           Text="0 / 3000"
+                           Foreground="{StaticResource MetinSolukBrush}" />
+
+                <Border x:Name="MesajKutu"
+                        Grid.Row="6" Grid.Column="1"
+                        Margin="0,12,0,0"
+                        Padding="10,8"
+                        Visibility="Collapsed">
+                    <TextBlock x:Name="MesajText" TextWrapping="Wrap" />
+                </Border>
+
+                <StackPanel Grid.Row="7" Grid.Column="1"
+                            Margin="0,18,0,0"
+                            Orientation="Horizontal">
+                    <Button x:Name="GonderButton"
+                            Content="Gönder"
+                            MinWidth="100"
+                            Style="{StaticResource AnaButon}"
+                            Click="GonderButton_Click" />
+                    <Button Content="Temizle"
+                            Margin="8,0,0,0"
+                            Click="TemizleButton_Click" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="8" Grid.Column="1"
+                           Margin="0,22,0,0"
+                           FontSize="12"
+                           Text="Geri bildiriminiz değerlendirilerek geliştirmelerimize yön verecektir."
+                           Foreground="{StaticResource MetinSolukBrush}" />
+            </Grid>
+        </Border>
+    </ScrollViewer>
+</UserControl>

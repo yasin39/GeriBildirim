@@ -1,0 +1,176 @@
+﻿<UserControl x:Class="GeriBildirim.Views.YonetimView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="UserControl_Loaded"
+             PreviewKeyDown="UserControl_PreviewKeyDown">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="16,14,16,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- FİLTRE ÇUBUĞU -->
+            <Border Grid.Row="0"
+                    Margin="0,0,0,12"
+                    Padding="14,12,14,10"
+                    Background="{StaticResource YuzeyBrush}"
+                    BorderBrush="{StaticResource KenarBrush}"
+                    BorderThickness="1">
+                <WrapPanel>
+                    <StackPanel Margin="0,0,14,6">
+                        <TextBlock Text="Modül" Style="{StaticResource Etiket}" Margin="0,0,0,4" />
+                        <ComboBox x:Name="ModulCombo" Width="190" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,14,6">
+                        <TextBlock Text="Durum" Style="{StaticResource Etiket}" Margin="0,0,0,4" />
+                        <ComboBox x:Name="DurumCombo"
+                                  Width="160"
+                                  DisplayMemberPath="Metin"
+                                  SelectedValuePath="Deger" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,14,6">
+                        <TextBlock Text="Başlangıç Tarihi" Style="{StaticResource Etiket}" Margin="0,0,0,4" />
+                        <DatePicker x:Name="IlkTarihPicker" Width="170" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,14,6">
+                        <TextBlock Text="Bitiş Tarihi" Style="{StaticResource Etiket}" Margin="0,0,0,4" />
+                        <DatePicker x:Name="SonTarihPicker" Width="170" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,0,6"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Bottom">
+                        <Button Content="Filtrele"
+                                Style="{StaticResource AnaButon}"
+                                Click="FiltreleButton_Click" />
+                        <Button Content="Temizle"
+                                Margin="8,0,0,0"
+                                Click="TemizleButton_Click" />
+                    </StackPanel>
+                </WrapPanel>
+            </Border>
+
+            <!-- İŞLEM ÇUBUĞU -->
+            <StackPanel Grid.Row="1"
+                        Margin="0,0,0,10"
+                        Orientation="Horizontal">
+                <Button x:Name="DetayButton"
+                        Content="Detay"
+                        MinWidth="90"
+                        IsEnabled="False"
+                        Click="DetayButton_Click" />
+                <Button x:Name="OkunduButton"
+                        Content="İşlem Yapıldı Yap"
+                        Margin="8,0,0,0"
+                        MinWidth="130"
+                        IsEnabled="False"
+                        Click="OkunduButton_Click" />
+                <Button x:Name="ArsivButton"
+                        Content="Arşivle"
+                        Margin="8,0,0,0"
+                        MinWidth="120"
+                        IsEnabled="False"
+                        Click="ArsivButton_Click" />
+                <Button x:Name="SilButton"
+                        Content="Kalıcı Sil"
+                        Margin="8,0,0,0"
+                        Style="{StaticResource TehlikeButon}"
+                        IsEnabled="False"
+                        Click="SilButton_Click" />
+                <Button x:Name="PdfButton"
+                        Content="PDF İndir"
+                        Margin="24,0,0,0"
+                        MinWidth="100"
+                        Click="PdfButton_Click" />
+            </StackPanel>
+
+            <!-- LİSTE -->
+            <Grid Grid.Row="2">
+                <DataGrid x:Name="KayitGrid" SelectionChanged="KayitGrid_SelectionChanged" MouseDoubleClick="KayitGrid_MouseDoubleClick">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="60" />
+
+                        <DataGridTemplateColumn Header="Durum" Width="120" SortMemberPath="DurumMetni">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DurumMetni}" FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#8A5A00" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DurumMetni}" Value="İşlem Yapıldı">
+                                                        <Setter Property="Foreground" Value="{StaticResource BasariMetinBrush}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding DurumMetni}" Value="Arşiv">
+                                                        <Setter Property="Foreground" Value="{StaticResource MetinSolukBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Kullanıcı" Binding="{Binding KullaniciAdSoyad}" Width="170" />
+                        <DataGridTextColumn Header="Modül" Binding="{Binding ModulAdi}" Width="120" />
+                        <DataGridTextColumn Header="Sayfa" Binding="{Binding SayfaAdi}" Width="160" />
+
+                        <DataGridTextColumn Header="Bildirim (Özet)" Binding="{Binding Ozet}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Tarih"
+                                            Binding="{Binding KayitTarihi, StringFormat='dd.MM.yyyy HH:mm'}"
+                                            Width="135" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock x:Name="BosMesaj"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Margin="0,20,0,0"
+                           Text="Filtreye uygun geri bildirim bulunamadı."
+                           Foreground="{StaticResource MetinSolukBrush}"
+                           IsHitTestVisible="False"
+                           Visibility="Collapsed" />
+            </Grid>
+        </Grid>
+
+        <!-- DURUM ÇUBUĞU -->
+        <StatusBar Grid.Row="1">
+            <StatusBarItem DockPanel.Dock="Right" Margin="0,0,10,0">
+                <TextBlock x:Name="DurumMesajiText" />
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock x:Name="ToplamText" Text="Toplam: 0" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="BekleyenText" Text="Bekleyen: 0" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="IslemYapilanText" Text="İşlem Yapılan: 0" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="ArsivText" Text="Arşiv: 0" />
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</UserControl>
