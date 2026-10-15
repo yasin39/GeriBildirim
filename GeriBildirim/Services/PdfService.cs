@@ -22,13 +22,13 @@ public class PdfService
     /// Geri bildirim listesi için A4 yatay PDF üretir.
     /// </summary>
     /// <param name="rows">
-    /// Her satır sırasıyla [numara, modül, sayfa, bildirim] değerlerini içerir.
+    /// Her satır sırasıyla [numara, proje, modül, sayfa, bildirim] değerlerini içerir.
     /// </param>
     /// <returns>PDF dosyasının byte dizisi.</returns>
     public byte[] GenerateGeriBildirimReport(List<List<string>> rows)
     {
         const string title = "Geri Bildirim Listesi";
-        var headers = new List<string> { "#", "Modül", "Sayfa", "Geri Bildirim" };
+        var headers = new List<string> { "#", "Proje", "Modül", "Sayfa", "Geri Bildirim" };
         int toplamKayit = rows.Count;
 
         return Document.Create(container =>
@@ -70,13 +70,14 @@ public class PdfService
     {
         container.Table(table =>
         {
-            // Sütun genişlik oranları: # 3, Modül 10, Sayfa 10, Geri Bildirim 77
+            // Sütun genişlik oranları: # 3, Proje 10, Modül 10, Sayfa 12, Geri Bildirim 65
             table.ColumnsDefinition(columns =>
             {
                 columns.RelativeColumn(3);
                 columns.RelativeColumn(10);
                 columns.RelativeColumn(10);
-                columns.RelativeColumn(77);
+                columns.RelativeColumn(12);
+                columns.RelativeColumn(65);
             });
 
             table.Header(header =>

@@ -31,13 +31,7 @@ public partial class App : Application
             return;
         }
 
-        string? menuHata = GeriBildirimMenu.Yukle();
-        if (menuHata is not null)
-        {
-            MessageBox.Show(menuHata, UygulamaAdi, MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown(1);
-            return;
-        }
+    
 
         base.OnStartup(e);
     }

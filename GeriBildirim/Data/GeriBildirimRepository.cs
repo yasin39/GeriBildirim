@@ -6,8 +6,7 @@ using Microsoft.Data.SqlClient;
 namespace GeriBildirim.Data;
 
 /// <summary>
-/// GeriBildirimler tablosuna ait tüm veritabanı işlemlerini yönetir.
-/// Gönderim ekranı ve yönetim ekranı bu sınıfı paylaşır.
+/// Geri bildirim kayıtlarına ait veritabanı işlemleri.
 /// </summary>
 public class GeriBildirimRepository
 {
@@ -16,45 +15,86 @@ public class GeriBildirimRepository
         return new SqlConnection(App.BaglantiDizesi);
     }
 
-    /// <summary>
-    /// Yeni bir geri bildirim kaydı ekler. <c>KayitTarihi</c> sunucu saatiyle
-    /// (<c>GETDATE()</c>), <c>Okundu</c>/<c>Arsivlendi</c> ise tablo
-    /// default'larıyla (0) atanır.
-    /// </summary>
-    /// <returns>Etkilenen satır sayısı (başarılıysa 1).</returns>
     public async Task<int> GeriBildirimEkleAsync(
-        string kullaniciAdSoyad, string modulAdi, string sayfaAdi, string bildirimIcerigi)
+        int projeId,
+        string kullaniciAdSoyad,
+        string modulAdi,
+        string sayfaAdi,
+        string bildirimIcerigi)
     {
         const string sql = @"
             INSERT INTO GeriBildirimler
-                (KullaniciAdSoyad, ModulAdi, SayfaAdi, BildirimIcerigi, KayitTarihi)
+                (ProjeId, KullaniciAdSoyad, ModulAdi, SayfaAdi,
+                 BildirimIcerigi, KayitTarihi)
             VALUES
-                (@KullaniciAdSoyad, @ModulAdi, @SayfaAdi, @BildirimIcerigi, GETDATE())";
+                (@ProjeId, @KullaniciAdSoyad, @ModulAdi, @SayfaAdi,
+                 @BildirimIcerigi, GETDATE())";
 
         using var conn = CreateConnection();
-        return await conn.ExecuteAsync(sql, new
+        await conn.OpenAsync();
+
+        using var transaction = conn.BeginTransaction(
+            System.Data.IsolationLevel.Serializable);
+
+        // Kontrol ve kayıt aynı transaction'da yapılır.
+        // Proje bu sırada değiştirilemez veya silinemez.
+        var proje = await conn.QuerySingleOrDefaultAsync<Proje>(
+            """
+            SELECT Id, Ad, MenuJson, Silindi
+            FROM dbo.Projeler WITH (UPDLOCK, HOLDLOCK)
+            WHERE Id = @Id AND Silindi = 0
+            """,
+            new { Id = projeId },
+            transaction);
+
+        if (proje is null)
         {
+            throw new InvalidOperationException(
+                "Proje silinmiş veya bulunamıyor. Proje listesini yenileyiniz.");
+        }
+
+        bool tanimGecerli = proje.Moduller.Any(
+            m => m.Modul == modulAdi && m.Sayfalar.Contains(sayfaAdi));
+
+        if (!tanimGecerli)
+        {
+            throw new InvalidOperationException(
+                "Projenin modül/sayfa tanımları değişmiş. " +
+                "Proje listesini yenileyiniz.");
+        }
+
+        int sonuc = await conn.ExecuteAsync(sql, new
+        {
+            ProjeId = projeId,
             KullaniciAdSoyad = kullaniciAdSoyad,
             ModulAdi = modulAdi,
             SayfaAdi = sayfaAdi,
             BildirimIcerigi = bildirimIcerigi
-        });
+        }, transaction);
+
+        transaction.Commit();
+        return sonuc;
     }
 
-    /// <summary>
-    /// Geri bildirimleri filtreleyerek döner. Modül, durum ve tarih aralığı
-    /// filtreleri dinamik uygulanır; boş bırakılan kriterler sorguya katılmaz.
-    /// Sıralama her zaman <c>KayitTarihi DESC</c>'tir.
-    /// </summary>
-    public async Task<List<GeriBildirimSatir>> GetGeriBildirimlerAsync(GeriBildirimFilter filter)
+    public async Task<List<GeriBildirimSatir>> GetGeriBildirimlerAsync(
+        GeriBildirimFilter filter)
     {
+        // Silinmiş projelerin geçmiş bildirimleri de listelenir.
         var sql = new StringBuilder(@"
-            SELECT Id, KullaniciAdSoyad, ModulAdi, SayfaAdi,
-                   BildirimIcerigi, KayitTarihi, Okundu, Arsivlendi
-            FROM GeriBildirimler
+            SELECT g.Id, KullaniciAdSoyad, ModulAdi, SayfaAdi,
+                   BildirimIcerigi, KayitTarihi, Okundu, Arsivlendi,
+                   p.Ad AS ProjeAdi
+            FROM dbo.GeriBildirimler g
+            INNER JOIN dbo.Projeler p ON p.Id = g.ProjeId
             WHERE 1 = 1");
 
         var p = new DynamicParameters();
+
+        if (filter.ProjeId.HasValue)
+        {
+            sql.Append(" AND g.ProjeId = @ProjeId");
+            p.Add("@ProjeId", filter.ProjeId.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(filter.ModulAdi))
         {
@@ -67,13 +107,14 @@ public class GeriBildirimRepository
             case GeriBildirimDurum.Okunmamis:
                 sql.Append(" AND Okundu = 0 AND Arsivlendi = 0");
                 break;
+
             case GeriBildirimDurum.Okunmus:
                 sql.Append(" AND Okundu = 1 AND Arsivlendi = 0");
                 break;
+
             case GeriBildirimDurum.Arsivlenmis:
                 sql.Append(" AND Arsivlendi = 1");
                 break;
-                // Tumu: durum filtresi uygulanmaz
         }
 
         if (filter.IlkTarih.HasValue)
@@ -84,7 +125,6 @@ public class GeriBildirimRepository
 
         if (filter.SonTarih.HasValue)
         {
-            // Bitiş gününü gün sonuna kadar dahil et
             sql.Append(" AND KayitTarihi < @SonTarihUst");
             p.Add("@SonTarihUst", filter.SonTarih.Value.Date.AddDays(1));
         }
@@ -92,29 +132,29 @@ public class GeriBildirimRepository
         sql.Append(" ORDER BY KayitTarihi DESC");
 
         using var conn = CreateConnection();
-        var result = await conn.QueryAsync<GeriBildirimSatir>(sql.ToString(), p);
+
+        var result = await conn.QueryAsync<GeriBildirimSatir>(
+            sql.ToString(), p);
+
         return result.AsList();
     }
 
-    /// <summary>
-    /// Tek bir geri bildirimi Id ile getirir. Kayıt yoksa null döner.
-    /// </summary>
     public async Task<GeriBildirimSatir?> GetGeriBildirimByIdAsync(int id)
     {
         const string sql = @"
-            SELECT Id, KullaniciAdSoyad, ModulAdi, SayfaAdi,
-                   BildirimIcerigi, KayitTarihi, Okundu, Arsivlendi
-            FROM GeriBildirimler
-            WHERE Id = @Id";
+            SELECT g.Id, KullaniciAdSoyad, ModulAdi, SayfaAdi,
+                   BildirimIcerigi, KayitTarihi, Okundu, Arsivlendi,
+                   p.Ad AS ProjeAdi
+            FROM dbo.GeriBildirimler g
+            INNER JOIN dbo.Projeler p ON p.Id = g.ProjeId
+            WHERE g.Id = @Id";
 
         using var conn = CreateConnection();
-        return await conn.QueryFirstOrDefaultAsync<GeriBildirimSatir>(sql, new { Id = id });
+
+        return await conn.QueryFirstOrDefaultAsync<GeriBildirimSatir>(
+            sql, new { Id = id });
     }
 
-    /// <summary>
-    /// <c>Okundu</c> bayrağını tersine çevirir ve yeni değeri döner.
-    /// Kayıt yoksa null döner.
-    /// </summary>
     public async Task<bool?> ToggleOkunduAsync(int id)
     {
         const string sql = @"
@@ -124,13 +164,11 @@ public class GeriBildirimRepository
             WHERE Id = @Id";
 
         using var conn = CreateConnection();
-        return await conn.QueryFirstOrDefaultAsync<bool?>(sql, new { Id = id });
+
+        return await conn.QueryFirstOrDefaultAsync<bool?>(
+            sql, new { Id = id });
     }
 
-    /// <summary>
-    /// <c>Arsivlendi</c> bayrağını tersine çevirir ve yeni değeri döner.
-    /// Kayıt yoksa null döner.
-    /// </summary>
     public async Task<bool?> ToggleArsivAsync(int id)
     {
         const string sql = @"
@@ -140,13 +178,11 @@ public class GeriBildirimRepository
             WHERE Id = @Id";
 
         using var conn = CreateConnection();
-        return await conn.QueryFirstOrDefaultAsync<bool?>(sql, new { Id = id });
+
+        return await conn.QueryFirstOrDefaultAsync<bool?>(
+            sql, new { Id = id });
     }
 
-    /// <summary>
-    /// Bir geri bildirimi veritabanından kalıcı olarak siler.
-    /// </summary>
-    /// <returns>Etkilenen satır sayısı (silinirse 1).</returns>
     public async Task<int> GeriBildirimSilAsync(int id)
     {
         const string sql = "DELETE FROM GeriBildirimler WHERE Id = @Id";

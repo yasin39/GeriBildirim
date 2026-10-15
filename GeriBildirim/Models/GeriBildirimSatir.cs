@@ -12,7 +12,8 @@ public record GeriBildirimSatir(
     string BildirimIcerigi,
     DateTime KayitTarihi,
     bool Okundu,
-    bool Arsivlendi)
+    bool Arsivlendi,
+    string ProjeAdi)
 {
     private const int OzetUzunluk = 100;
 

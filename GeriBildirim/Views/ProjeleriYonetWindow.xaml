@@ -1,0 +1,78 @@
+﻿<Window x:Class="GeriBildirim.Views.ProjeleriYonetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Projeleri Yönet"
+        Width="700"
+        Height="480"
+        MinWidth="560"
+        MinHeight="360"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Loaded="Window_Loaded">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Text="Bir proje seçip adını, modüllerini ve sayfalarını düzenleyebilirsiniz."
+            TextWrapping="Wrap"
+            Margin="0,0,0,12" />
+
+        <WrapPanel Grid.Row="1" Margin="0,0,0,12">
+            <Button x:Name="EkleButton"
+                    Content="Proje Ekle"
+                    Click="Ekle_Click" />
+
+            <Button x:Name="DuzenleButton"
+                    Content="Düzenle"
+                    Click="Duzenle_Click"
+                    IsEnabled="False"
+                    Margin="8,0,0,0" />
+
+            <Button x:Name="SilButton"
+                    Content="Projeyi Sil"
+                    Click="Sil_Click"
+                    Style="{StaticResource TehlikeButon}"
+                    IsEnabled="False"
+                    Margin="8,0,0,0" />
+
+            <Button x:Name="YenileButton"
+                    Content="Yenile"
+                    Click="Yenile_Click"
+                    Margin="8,0,0,0" />
+        </WrapPanel>
+
+        <DataGrid x:Name="ProjeGrid"
+                  Grid.Row="2"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  SelectionMode="Single"
+                  SelectionChanged="ProjeGrid_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="#"
+                                    Binding="{Binding Id}"
+                                    Width="60" />
+                <DataGridTextColumn Header="Proje"
+                                    Binding="{Binding Ad}"
+                                    Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock x:Name="DurumText"
+                   Grid.Row="3"
+                   TextWrapping="Wrap"
+                   Margin="0,10,0,0" />
+
+        <TextBlock Grid.Row="4"
+                   Margin="0,10,0,0"
+                   TextWrapping="Wrap"
+                   Foreground="{StaticResource MetinSolukBrush}"
+                   Text="Silinen projeler yeni bildirimlerde seçilemez. Eski bildirimler yönetim ekranında korunur." />
+    </Grid>
+</Window>

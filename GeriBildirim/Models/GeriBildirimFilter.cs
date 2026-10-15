@@ -6,6 +6,7 @@
 /// </summary>
 public class GeriBildirimFilter
 {
+    public int? ProjeId { get; set; }
     public string? ModulAdi { get; set; }
 
     public GeriBildirimDurum Durum { get; set; } = GeriBildirimDurum.Tumu;

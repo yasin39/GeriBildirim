@@ -14,6 +14,7 @@ public partial class DetayWindow : Window
         InitializeComponent();
 
         Title = $"Geri Bildirim Detayı — #{kayit.Id}";
+        ProjeText.Text = kayit.ProjeAdi;
         KullaniciText.Text = kayit.KullaniciAdSoyad;
         TarihText.Text = kayit.KayitTarihi.ToString("dd.MM.yyyy HH:mm");
         ModulText.Text = kayit.ModulAdi;

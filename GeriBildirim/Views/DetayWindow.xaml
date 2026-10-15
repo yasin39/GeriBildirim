@@ -38,7 +38,15 @@
             <TextBlock x:Name="ModulText" Grid.Row="1" Grid.Column="1" Margin="0,0,12,8" TextWrapping="Wrap" />
             <TextBlock Grid.Row="1" Grid.Column="2" Text="Sayfa" Style="{StaticResource Etiket}" Margin="0,0,0,8" />
             <TextBlock x:Name="SayfaText" Grid.Row="1" Grid.Column="3" Margin="0,0,0,8" TextWrapping="Wrap" />
+            <TextBlock Grid.Row="2"
+           Grid.Column="2"
+           Text="Proje"
+           Style="{StaticResource Etiket}" />
 
+            <TextBlock x:Name="ProjeText"
+           Grid.Row="2"
+           Grid.Column="3"
+           TextWrapping="Wrap" />
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Durum" Style="{StaticResource Etiket}" />
             <TextBlock x:Name="DurumText" Grid.Row="2" Grid.Column="1" FontWeight="SemiBold" />
         </Grid>

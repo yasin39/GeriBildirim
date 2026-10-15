@@ -25,6 +25,15 @@
                     BorderThickness="1">
                 <WrapPanel>
                     <StackPanel Margin="0,0,14,6">
+                        <TextBlock Text="Proje"
+               Style="{StaticResource Etiket}"
+               Margin="0,0,0,4" />
+                        <ComboBox x:Name="ProjeCombo"
+                                    Width="190"
+                                    DisplayMemberPath="GorunenAd"
+                                    SelectionChanged="ProjeCombo_SelectionChanged" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,14,6">
                         <TextBlock Text="Modül" Style="{StaticResource Etiket}" Margin="0,0,0,4" />
                         <ComboBox x:Name="ModulCombo" Width="190" />
                     </StackPanel>
@@ -64,6 +73,12 @@
             <StackPanel Grid.Row="1"
                         Margin="0,0,0,10"
                         Orientation="Horizontal">
+                <Button Content="Proje Ekle"
+        Click="ProjeEkle_Click"
+        Margin="0,0,8,0" />
+                <Button Content="Projeleri Yönet"
+        Click="ProjeleriYonet_Click"
+        Margin="0,0,8,0" />
                 <Button x:Name="DetayButton"
                         Content="Detay"
                         MinWidth="90"
@@ -123,6 +138,7 @@
                         </DataGridTemplateColumn>
 
                         <DataGridTextColumn Header="Kullanıcı" Binding="{Binding KullaniciAdSoyad}" Width="170" />
+                        <DataGridTextColumn Header="Proje" Binding="{Binding ProjeAdi}" Width="150" />
                         <DataGridTextColumn Header="Modül" Binding="{Binding ModulAdi}" Width="120" />
                         <DataGridTextColumn Header="Sayfa" Binding="{Binding SayfaAdi}" Width="160" />
 

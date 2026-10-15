@@ -21,7 +21,43 @@ public partial class GonderView : UserControl
     public GonderView()
     {
         InitializeComponent();
-        ModulCombo.ItemsSource = GeriBildirimMenu.ModulAdlari.ToList();
+        ModulCombo.IsEnabled = false;
+    }
+
+    private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        => await ProjeleriYukleAsync();
+
+    private async void ProjeleriYenile_Click(object sender, RoutedEventArgs e)
+        => await ProjeleriYukleAsync();
+
+    private async Task ProjeleriYukleAsync()
+    {
+        int? seciliId = (ProjeCombo.SelectedItem as Proje)?.Id;
+
+        try
+        {
+            var projeler = await new ProjeRepository().GetProjelerAsync();
+            ProjeCombo.ItemsSource = projeler;
+            ProjeCombo.SelectedItem = projeler.FirstOrDefault(p => p.Id == seciliId)
+                ?? (projeler.Count == 1 ? projeler[0] : null);
+        }
+        catch (Exception ex)
+        {
+            ProjeCombo.ItemsSource = null;
+            MesajGoster(
+                $"Projeler yüklenemedi. Veritabanı güncellemesini ve bağlantıyı kontrol ediniz: {ex.Message}",
+                false);
+        }
+    }
+
+    private void ProjeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        ModulCombo.ItemsSource = (ProjeCombo.SelectedItem as Proje)?
+            .Moduller.Select(m => m.Modul).ToList();
+
+        ModulCombo.IsEnabled = ProjeCombo.SelectedItem is Proje;
+        SayfaCombo.ItemsSource = null;
+        SayfaCombo.IsEnabled = false;
     }
 
     // -----------------------------------------------------------------------
@@ -35,7 +71,9 @@ public partial class GonderView : UserControl
 
         if (ModulCombo.SelectedItem is string modul)
         {
-            SayfaCombo.ItemsSource = GeriBildirimMenu.SayfalariGetir(modul);
+            SayfaCombo.ItemsSource = (ProjeCombo.SelectedItem as Proje)?
+                .Moduller.FirstOrDefault(m => m.Modul == modul)?.Sayfalar;
+
             SayfaCombo.SelectedIndex = -1;
             SayfaCombo.IsEnabled = true;
         }
@@ -68,6 +106,7 @@ public partial class GonderView : UserControl
             return;
         }
 
+        int projeId = ((Proje)ProjeCombo.SelectedItem).Id;
         string modul = (string)ModulCombo.SelectedItem;
         string sayfa = (string)SayfaCombo.SelectedItem;
         string icerik = BildirimText.Text.Trim();
@@ -77,21 +116,25 @@ public partial class GonderView : UserControl
         try
         {
             string adSoyad = await Task.Run(() => _kullaniciService.AdSoyad);
-            int sonuc = await _repository.GeriBildirimEkleAsync(adSoyad, modul, sayfa, icerik);
+            int sonuc = await _repository.GeriBildirimEkleAsync(
+                projeId, adSoyad, modul, sayfa, icerik);
 
             if (sonuc > 0)
             {
                 FormuTemizle();
-                MesajGoster("Geri bildiriminiz başarıyla kaydedildi. Teşekkür ederiz!", true);
+                MesajGoster(
+                    "Geri bildiriminiz başarıyla kaydedildi. Teşekkür ederiz!", true);
             }
             else
             {
-                MesajGoster("Geri bildirim kaydedilemedi. Lütfen tekrar deneyiniz.", false);
+                MesajGoster(
+                    "Geri bildirim kaydedilemedi. Lütfen tekrar deneyiniz.", false);
             }
         }
         catch (Exception ex)
         {
-            MesajGoster($"Geri bildirim kaydedilirken bir hata oluştu: {ex.Message}", false);
+            MesajGoster(
+                $"Geri bildirim kaydedilirken bir hata oluştu: {ex.Message}", false);
         }
         finally
         {
@@ -114,6 +157,15 @@ public partial class GonderView : UserControl
     /// </summary>
     private bool FormuDogrula()
     {
+        if (ProjeCombo.SelectedItem is not Proje)
+        {
+            MesajGoster(
+                "Lütfen proje seçiniz. Proje yoksa Yönetim ekranından ekleyebilirsiniz.",
+                false);
+            ProjeCombo.Focus();
+            return false;
+        }
+
         if (ModulCombo.SelectedItem is null)
         {
             MesajGoster("Lütfen modül seçiniz.", false);
@@ -147,8 +199,12 @@ public partial class GonderView : UserControl
 
     private void MesajGoster(string metin, bool basarili)
     {
-        MesajKutu.Background = (Brush)FindResource(basarili ? "BasariZeminBrush" : "HataZeminBrush");
-        MesajText.Foreground = (Brush)FindResource(basarili ? "BasariMetinBrush" : "HataMetinBrush");
+        MesajKutu.Background = (Brush)FindResource(
+            basarili ? "BasariZeminBrush" : "HataZeminBrush");
+
+        MesajText.Foreground = (Brush)FindResource(
+            basarili ? "BasariMetinBrush" : "HataMetinBrush");
+
         MesajText.Text = metin;
         MesajKutu.Visibility = Visibility.Visible;
     }

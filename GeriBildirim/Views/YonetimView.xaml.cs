@@ -28,6 +28,8 @@ public partial class YonetimView : UserControl
     /// <summary>Bir satır işlemi sürerken ikinci işlemin başlamasını engeller.</summary>
     private bool _islemde;
 
+    private List<Proje> _projeler = [];
+
     public YonetimView()
     {
         InitializeComponent();
@@ -37,7 +39,89 @@ public partial class YonetimView : UserControl
     }
 
     /// <summary>Grid'de seçili kayıt. Seçim yoksa null.</summary>
-    private GeriBildirimSatir? SeciliKayit => KayitGrid.SelectedItem as GeriBildirimSatir;
+    private GeriBildirimSatir? SeciliKayit
+        => KayitGrid.SelectedItem as GeriBildirimSatir;
+
+    private async Task<bool> ProjeleriYukleAsync(int? yeniId = null)
+    {
+        try
+        {
+            _projeler = await new ProjeRepository()
+    .GetProjelerAsync(silinenleriDahilEt: true);
+
+            ProjeCombo.ItemsSource = new List<Proje>
+            {
+                new() { Ad = TumuMetni }
+            }.Concat(_projeler).ToList();
+
+            if (yeniId.HasValue)
+            {
+                _aktifFiltre.ProjeId = yeniId;
+                _aktifFiltre.ModulAdi = null;
+            }
+
+            FiltreKontrolleriniDoldur(_aktifFiltre);
+
+            // Silinmiş/eski proje veya modül filtresini sorguya taşımayın.
+            _aktifFiltre = FiltreyiKontrollerdenOku();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            KayitGrid.ItemsSource = null;
+
+            MessageBox.Show(
+                $"Projeler yüklenemedi. Veritabanı güncellemesini ve bağlantıyı kontrol ediniz:\n{ex.Message}",
+                "Projeler", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            return false;
+        }
+    }
+
+    private async void ProjeleriYonet_Click(object sender, RoutedEventArgs e)
+    {
+        new ProjeleriYonetWindow
+        {
+            Owner = Window.GetWindow(this)
+        }.ShowDialog();
+
+        if (await ProjeleriYukleAsync())
+        {
+            _ayarService.Kaydet(_aktifFiltre);
+            await ListeyiYukleAsync();
+        }
+    }
+
+    private void ProjeCombo_SelectionChanged(
+        object sender, SelectionChangedEventArgs e)
+    {
+        var secili = ProjeCombo.SelectedItem as Proje;
+
+        var moduller = secili is { Id: > 0 }
+            ? secili.Moduller
+            : _projeler.SelectMany(p => p.Moduller);
+
+        ModulCombo.ItemsSource = new[] { TumuMetni }
+            .Concat(moduller.Select(m => m.Modul).Distinct())
+            .ToList();
+
+        ModulCombo.SelectedIndex = 0;
+    }
+
+    private async void ProjeEkle_Click(object sender, RoutedEventArgs e)
+    {
+        var pencere = new ProjeEkleWindow
+        {
+            Owner = Window.GetWindow(this)
+        };
+
+        if (pencere.ShowDialog() == true
+            && await ProjeleriYukleAsync(pencere.EklenenProjeId))
+        {
+            _ayarService.Kaydet(_aktifFiltre);
+            await ListeyiYukleAsync();
+        }
+    }
 
     // -----------------------------------------------------------------------
     // BAŞLANGIÇ
@@ -49,7 +133,12 @@ public partial class YonetimView : UserControl
     private void FiltreKontrolleriniHazirla()
     {
         var modulSecenekleri = new List<string> { TumuMetni };
-        modulSecenekleri.AddRange(GeriBildirimMenu.ModulAdlari);
+
+        modulSecenekleri.AddRange(
+            _projeler.SelectMany(p => p.Moduller)
+                .Select(m => m.Modul)
+                .Distinct());
+
         ModulCombo.ItemsSource = modulSecenekleri;
 
         DurumCombo.ItemsSource = new List<DurumSecenek>
@@ -65,7 +154,13 @@ public partial class YonetimView : UserControl
 
     private void FiltreKontrolleriniDoldur(GeriBildirimFilter filtre)
     {
-        bool modulListede = filtre.ModulAdi is not null && GeriBildirimMenu.ModulAdlari.Contains(filtre.ModulAdi);
+        ProjeCombo.SelectedItem = _projeler.FirstOrDefault(
+            p => p.Id == filtre.ProjeId)
+            ?? (ProjeCombo.ItemsSource as List<Proje>)?.FirstOrDefault();
+
+        bool modulListede = filtre.ModulAdi is not null
+            && ModulCombo.Items.Contains(filtre.ModulAdi);
+
         ModulCombo.SelectedItem = modulListede ? filtre.ModulAdi : TumuMetni;
 
         DurumCombo.SelectedValue = filtre.Durum;
@@ -79,7 +174,11 @@ public partial class YonetimView : UserControl
     /// </summary>
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        await ListeyiYukleAsync();
+        if (await ProjeleriYukleAsync())
+        {
+            await ListeyiYukleAsync();
+        }
+
         KayitGrid.Focus();
     }
 
@@ -108,7 +207,8 @@ public partial class YonetimView : UserControl
     // SATIR İŞLEMLERİ
     // -----------------------------------------------------------------------
 
-    private void KayitGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void KayitGrid_SelectionChanged(
+        object sender, SelectionChangedEventArgs e)
     {
         ButonlariGuncelle();
     }
@@ -122,11 +222,13 @@ public partial class YonetimView : UserControl
     /// Yalnızca bir satıra çift tıklanınca detay açar; sütun başlığı veya
     /// boş alana çift tıklama yok sayılır.
     /// </summary>
-    private async void KayitGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    private async void KayitGrid_MouseDoubleClick(
+        object sender, MouseButtonEventArgs e)
     {
         var kaynak = e.OriginalSource as DependencyObject;
 
-        if (kaynak is not null && ItemsControl.ContainerFromElement(KayitGrid, kaynak) is DataGridRow)
+        if (kaynak is not null
+            && ItemsControl.ContainerFromElement(KayitGrid, kaynak) is DataGridRow)
         {
             await DetayAcAsync();
         }
@@ -190,7 +292,11 @@ public partial class YonetimView : UserControl
                 return;
             }
 
-            var pencere = new DetayWindow(kayit) { Owner = Window.GetWindow(this) };
+            var pencere = new DetayWindow(kayit)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
             pencere.ShowDialog();
         }
         catch (Exception ex)
@@ -221,13 +327,18 @@ public partial class YonetimView : UserControl
         {
             MessageBox.Show(
                 "Kalıcı silme yalnızca arşivlenmiş kayıtlar için yapılabilir.\nÖnce kaydı arşivleyiniz.",
-                "Geri Bildirim", MessageBoxButton.OK, MessageBoxImage.Information);
+                "Geri Bildirim",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
             return;
         }
 
         var onay = MessageBox.Show(
             $"#{kayit.Id} numaralı geri bildirim kalıcı olarak silinecek. Bu işlem geri alınamaz.\n\nDevam etmek istiyor musunuz?",
-            "Kalıcı Sil", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+            "Kalıcı Sil",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
 
         if (onay != MessageBoxResult.Yes)
         {
@@ -268,7 +379,9 @@ public partial class YonetimView : UserControl
     private async Task<string> KesinSilIsleminiYapAsync(int id)
     {
         int sonuc = await _repository.GeriBildirimSilAsync(id);
-        return sonuc > 0 ? "Kayıt kalıcı olarak silindi." : "Geri bildirim bulunamadı.";
+        return sonuc > 0
+            ? "Kayıt kalıcı olarak silindi."
+            : "Geri bildirim bulunamadı.";
     }
 
     /// <summary>
@@ -353,7 +466,8 @@ public partial class YonetimView : UserControl
 
             if (kayitlar.Count == 0)
             {
-                DurumMesajiText.Text = "Görüntülenen listede geri bildirim bulunmuyor.";
+                DurumMesajiText.Text =
+                    "Görüntülenen listede geri bildirim bulunmuyor.";
                 return;
             }
 
@@ -375,16 +489,20 @@ public partial class YonetimView : UserControl
                 .Select((k, i) => new List<string>
                 {
                     (i + 1).ToString(),
+                    k.ProjeAdi,
                     k.ModulAdi,
                     k.SayfaAdi,
                     k.BildirimIcerigi
                 })
                 .ToList();
 
-            byte[] pdf = await Task.Run(() => _pdfService.GenerateGeriBildirimReport(satirlar));
+            byte[] pdf = await Task.Run(
+                () => _pdfService.GenerateGeriBildirimReport(satirlar));
+
             await File.WriteAllBytesAsync(dialog.FileName, pdf);
 
-            DurumMesajiText.Text = $"{kayitlar.Count} kayıt PDF olarak kaydedildi.";
+            DurumMesajiText.Text =
+                $"{kayitlar.Count} kayıt PDF olarak kaydedildi.";
         }
         catch (Exception ex)
         {
@@ -407,8 +525,18 @@ public partial class YonetimView : UserControl
     {
         return new GeriBildirimFilter
         {
-            ModulAdi = ModulCombo.SelectedIndex > 0 ? (string)ModulCombo.SelectedItem : null,
-            Durum = DurumCombo.SelectedValue is GeriBildirimDurum durum ? durum : GeriBildirimDurum.Tumu,
+            ProjeId = ProjeCombo.SelectedItem is Proje { Id: > 0 } proje
+                ? proje.Id
+                : null,
+
+            ModulAdi = ModulCombo.SelectedIndex > 0
+                ? (string)ModulCombo.SelectedItem
+                : null,
+
+            Durum = DurumCombo.SelectedValue is GeriBildirimDurum durum
+                ? durum
+                : GeriBildirimDurum.Tumu,
+
             IlkTarih = IlkTarihPicker.SelectedDate,
             SonTarih = SonTarihPicker.SelectedDate
         };
@@ -417,7 +545,9 @@ public partial class YonetimView : UserControl
     /// <summary>
     /// Son uygulanan filtreyle kayıtları çeker, grid'i ve durum çubuğunu günceller.
     /// </summary>
-    /// <param name="seciliId">Yenilemeden sonra yeniden seçilecek kaydın Id'si (varsa).</param>
+    /// <param name="seciliId">
+    /// Yenilemeden sonra yeniden seçilecek kaydın Id'si (varsa).
+    /// </param>
     private async Task ListeyiYukleAsync(int? seciliId = null)
     {
         try
@@ -425,12 +555,17 @@ public partial class YonetimView : UserControl
             var kayitlar = await _repository.GetGeriBildirimlerAsync(_aktifFiltre);
 
             KayitGrid.ItemsSource = kayitlar;
-            BosMesaj.Visibility = kayitlar.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            BosMesaj.Visibility = kayitlar.Count == 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
 
             ToplamText.Text = $"Toplam: {kayitlar.Count}";
-            BekleyenText.Text = $"Bekleyen: {kayitlar.Count(k => !k.Okundu && !k.Arsivlendi)}";
-            IslemYapilanText.Text = $"İşlem Yapılan: {kayitlar.Count(k => k.Okundu && !k.Arsivlendi)}";
-            ArsivText.Text = $"Arşiv: {kayitlar.Count(k => k.Arsivlendi)}";
+            BekleyenText.Text =
+                $"Bekleyen: {kayitlar.Count(k => !k.Okundu && !k.Arsivlendi)}";
+            IslemYapilanText.Text =
+                $"İşlem Yapılan: {kayitlar.Count(k => k.Okundu && !k.Arsivlendi)}";
+            ArsivText.Text =
+                $"Arşiv: {kayitlar.Count(k => k.Arsivlendi)}";
 
             if (seciliId.HasValue)
             {
