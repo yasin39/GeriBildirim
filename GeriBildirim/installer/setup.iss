@@ -2,10 +2,11 @@
 ; Yeni sürüm çıkarırken yalnızca AppVersion değerini değiştirin.
 
 #define AppName "Geri Bildirim"
-#define AppVersion "1.0.3"
+#define AppVersion "1.0.4"
 #define AppPublisher "Yasin Çınar"
 #define AppExeName "GeriBildirim.exe"
-#define PublishDir "..\publish-framework"
+; installer klasöründen depo kökündeki yayın klasörüne iki seviye çıkılır.
+#define PublishDir "..\..\artifacts\sqlite-publish"
 
 [Setup]
 ; AppId sürümler arasında DEĞİŞMEMELİ; yeni sürüm eskisinin üzerine kurulur.
@@ -36,8 +37,10 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 ; Program dosyaları her kurulumda güncellenir.
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Excludes: "appsettings.json,menu.json,*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-; Ayar dosyaları yalnızca ilk kurulumda yazılır, güncellemede mevcut olan ezilmez.
-Source: "{#PublishDir}\appsettings.json"; DestDir: "{app}"; Flags: onlyifdoesntexist
+; SQL Server bağlantısını SQLite ayarına geçirir. Kullanıcı veritabanı
+; LocalAppData'dadır ve kurulum/güncelleme tarafından değiştirilmez.
+Source: "{#PublishDir}\appsettings.json"; DestDir: "{app}"; Flags: ignoreversion
+; Menü dosyası yalnızca ilk kurulumda yazılır.
 Source: "{#PublishDir}\menu.json"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
 [Icons]

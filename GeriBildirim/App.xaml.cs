@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Markup;
 using System.Windows.Threading;
+using GeriBildirim.Data;
 using GeriBildirim.Models;
 
 namespace GeriBildirim;
@@ -17,7 +18,7 @@ public partial class App : Application
     private const string AyarDosyasi = "appsettings.json";
     private const string UygulamaAdi = "Geri Bildirim";
 
-    /// <summary>SQL Server bağlantı dizesi. Başlangıçta bir kez okunur.</summary>
+    /// <summary>SQLite bağlantı dizesi. Başlangıçta bir kez okunur.</summary>
     public static string BaglantiDizesi { get; private set; } = string.Empty;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -31,7 +32,18 @@ public partial class App : Application
             return;
         }
 
-    
+        try
+        {
+            SqliteDatabase.Initialize(BaglantiDizesi);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"SQLite veritabanı açılamadı:\n{ex.Message}",
+                UygulamaAdi, MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+            return;
+        }
 
         base.OnStartup(e);
     }
@@ -99,7 +111,7 @@ public partial class App : Application
                 return false;
             }
 
-            BaglantiDizesi = baglanti;
+            BaglantiDizesi = SqliteDatabase.ResolveConnectionString(baglanti);
             return true;
         }
         catch (Exception ex)

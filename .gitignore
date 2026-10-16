@@ -179,6 +179,7 @@ DocProject/Help/html
 # Click-Once directory
 publish/
 publish-framework/
+GeriBildirim/installer/output/
 
 # Publish Web Output
 *.[Pp]ublish.xml
@@ -266,6 +267,13 @@ ServiceFabricBackup/
 *.mdf
 *.ldf
 *.ndf
+
+# SQLite runtime files (the migrated seed is included deliberately)
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+!GeriBildirim/Data/GeriBildirim.seed.db
 
 # Business Intelligence projects
 *.rdl.data

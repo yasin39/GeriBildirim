@@ -1,8 +1,7 @@
 ﻿namespace GeriBildirim.Models;
 
 /// <summary>
-/// Yönetim listesindeki tek bir geri bildirim satırı. Dapper, kurucu
-/// parametrelerini sütun adlarıyla eşleştirir.
+/// Yönetim listesindeki tek bir geri bildirim satırı.
 /// </summary>
 public record GeriBildirimSatir(
     int Id,
@@ -15,6 +14,12 @@ public record GeriBildirimSatir(
     bool Arsivlendi,
     string ProjeAdi)
 {
+    // SQLite INTEGER/boole değerlerini Int64, tarihleri string döndürür.
+    // Dapper parametresiz kurucu üzerinden özellikleri doğru CLR türlerine çevirir.
+    public GeriBildirimSatir() : this(0, "", "", "", "", default, false, false, "")
+    {
+    }
+
     private const int OzetUzunluk = 100;
 
     /// <summary>Grid'de gösterilecek durum metni.</summary>

@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Dapper;
 using GeriBildirim.Models;
-using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
 
 namespace GeriBildirim.Data;
 
@@ -10,9 +10,16 @@ namespace GeriBildirim.Data;
 /// </summary>
 public class GeriBildirimRepository
 {
-    private static SqlConnection CreateConnection()
+    private readonly string _connectionString;
+
+    public GeriBildirimRepository(string? connectionString = null)
     {
-        return new SqlConnection(App.BaglantiDizesi);
+        _connectionString = connectionString ?? App.BaglantiDizesi;
+    }
+
+    private SqliteConnection CreateConnection()
+    {
+        return SqliteDatabase.CreateConnection(_connectionString);
     }
 
     public async Task<int> GeriBildirimEkleAsync(
@@ -28,20 +35,19 @@ public class GeriBildirimRepository
                  BildirimIcerigi, KayitTarihi)
             VALUES
                 (@ProjeId, @KullaniciAdSoyad, @ModulAdi, @SayfaAdi,
-                 @BildirimIcerigi, GETDATE())";
+                 @BildirimIcerigi, @KayitTarihi)";
 
         using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        using var transaction = conn.BeginTransaction(
-            System.Data.IsolationLevel.Serializable);
+        using var transaction = conn.BeginTransaction(deferred: false);
 
         // Kontrol ve kayıt aynı transaction'da yapılır.
         // Proje bu sırada değiştirilemez veya silinemez.
         var proje = await conn.QuerySingleOrDefaultAsync<Proje>(
             """
             SELECT Id, Ad, MenuJson, Silindi
-            FROM dbo.Projeler WITH (UPDLOCK, HOLDLOCK)
+            FROM Projeler
             WHERE Id = @Id AND Silindi = 0
             """,
             new { Id = projeId },
@@ -69,7 +75,8 @@ public class GeriBildirimRepository
             KullaniciAdSoyad = kullaniciAdSoyad,
             ModulAdi = modulAdi,
             SayfaAdi = sayfaAdi,
-            BildirimIcerigi = bildirimIcerigi
+            BildirimIcerigi = bildirimIcerigi,
+            KayitTarihi = DateTime.Now
         }, transaction);
 
         transaction.Commit();
@@ -84,8 +91,8 @@ public class GeriBildirimRepository
             SELECT g.Id, KullaniciAdSoyad, ModulAdi, SayfaAdi,
                    BildirimIcerigi, KayitTarihi, Okundu, Arsivlendi,
                    p.Ad AS ProjeAdi
-            FROM dbo.GeriBildirimler g
-            INNER JOIN dbo.Projeler p ON p.Id = g.ProjeId
+            FROM GeriBildirimler g
+            INNER JOIN Projeler p ON p.Id = g.ProjeId
             WHERE 1 = 1");
 
         var p = new DynamicParameters();
@@ -145,8 +152,8 @@ public class GeriBildirimRepository
             SELECT g.Id, KullaniciAdSoyad, ModulAdi, SayfaAdi,
                    BildirimIcerigi, KayitTarihi, Okundu, Arsivlendi,
                    p.Ad AS ProjeAdi
-            FROM dbo.GeriBildirimler g
-            INNER JOIN dbo.Projeler p ON p.Id = g.ProjeId
+            FROM GeriBildirimler g
+            INNER JOIN Projeler p ON p.Id = g.ProjeId
             WHERE g.Id = @Id";
 
         using var conn = CreateConnection();
@@ -160,8 +167,8 @@ public class GeriBildirimRepository
         const string sql = @"
             UPDATE GeriBildirimler
             SET Okundu = CASE WHEN Okundu = 1 THEN 0 ELSE 1 END
-            OUTPUT inserted.Okundu
-            WHERE Id = @Id";
+            WHERE Id = @Id
+            RETURNING Okundu";
 
         using var conn = CreateConnection();
 
@@ -174,8 +181,8 @@ public class GeriBildirimRepository
         const string sql = @"
             UPDATE GeriBildirimler
             SET Arsivlendi = CASE WHEN Arsivlendi = 1 THEN 0 ELSE 1 END
-            OUTPUT inserted.Arsivlendi
-            WHERE Id = @Id";
+            WHERE Id = @Id
+            RETURNING Arsivlendi";
 
         using var conn = CreateConnection();
 

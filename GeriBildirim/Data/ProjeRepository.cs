@@ -1,21 +1,28 @@
 ﻿using Dapper;
 using GeriBildirim.Models;
-using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
 
 namespace GeriBildirim.Data;
 
 public class ProjeRepository
 {
+    private readonly string _connectionString;
+
+    public ProjeRepository(string? connectionString = null)
+    {
+        _connectionString = connectionString ?? App.BaglantiDizesi;
+    }
+
     public async Task<List<Proje>> GetProjelerAsync(bool silinenleriDahilEt = false)
     {
         const string sql = """
             SELECT Id, Ad, MenuJson, Silindi
-            FROM dbo.Projeler
+            FROM Projeler
             WHERE Silindi = 0 OR @SilinenleriDahilEt = 1
             ORDER BY Silindi, Ad
             """;
 
-        using var conn = new SqlConnection(App.BaglantiDizesi);
+        using var conn = SqliteDatabase.CreateConnection(_connectionString);
 
         return (await conn.QueryAsync<Proje>(
             sql,
@@ -26,19 +33,19 @@ public class ProjeRepository
     {
         var tanim = ProjeTanimi.Hazirla(ad, tanimlar);
 
-        using var conn = new SqlConnection(App.BaglantiDizesi);
+        using var conn = SqliteDatabase.CreateConnection(_connectionString);
 
         try
         {
             return await conn.QuerySingleAsync<int>(
                 """
-                INSERT INTO dbo.Projeler (Ad, MenuJson)
-                OUTPUT inserted.Id
+                INSERT INTO Projeler (Ad, MenuJson)
                 VALUES (@Ad, @MenuJson)
+                RETURNING Id
                 """,
                 new { tanim.Ad, tanim.MenuJson });
         }
-        catch (SqlException ex) when (ex.Number is 2601 or 2627)
+        catch (SqliteException ex) when (ex.SqliteExtendedErrorCode is 2067 or 1555)
         {
             throw new InvalidOperationException(
                 "Bu ad başka bir projede kullanılıyor. " +
@@ -55,16 +62,14 @@ public class ProjeRepository
         var tanim = ProjeTanimi.Hazirla(ad, tanimlar);
 
         const string sql = """
-            UPDATE dbo.Projeler
+            UPDATE Projeler
             SET Ad = @Ad, MenuJson = @MenuJson
             WHERE Id = @Id AND Silindi = 0
-              AND CONVERT(varbinary(max), Ad) =
-                  CONVERT(varbinary(max), @EskiAd)
-              AND CONVERT(varbinary(max), MenuJson) =
-                  CONVERT(varbinary(max), @EskiMenuJson)
+              AND Ad COLLATE BINARY = @EskiAd
+              AND MenuJson COLLATE BINARY = @EskiMenuJson
             """;
 
-        using var conn = new SqlConnection(App.BaglantiDizesi);
+        using var conn = SqliteDatabase.CreateConnection(_connectionString);
 
         try
         {
@@ -85,7 +90,7 @@ public class ProjeRepository
                     "Pencereyi kapatıp proje listesini yenileyiniz.");
             }
         }
-        catch (SqlException ex) when (ex.Number is 2601 or 2627)
+        catch (SqliteException ex) when (ex.SqliteExtendedErrorCode is 2067 or 1555)
         {
             throw new InvalidOperationException(
                 "Bu ad başka bir projede kullanılıyor. " +
@@ -96,11 +101,11 @@ public class ProjeRepository
 
     public async Task SilAsync(int id)
     {
-        using var conn = new SqlConnection(App.BaglantiDizesi);
+        using var conn = SqliteDatabase.CreateConnection(_connectionString);
 
         int sonuc = await conn.ExecuteAsync(
             """
-            UPDATE dbo.Projeler
+            UPDATE Projeler
             SET Silindi = 1
             WHERE Id = @Id AND Silindi = 0
             """,
