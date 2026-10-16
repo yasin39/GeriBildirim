@@ -2,10 +2,10 @@
 ; Yeni sürüm çıkarırken yalnızca AppVersion değerini değiştirin.
 
 #define AppName "Geri Bildirim"
-#define AppVersion "1.0.2"
+#define AppVersion "1.0.3"
 #define AppPublisher "Yasin Çınar"
 #define AppExeName "GeriBildirim.exe"
-#define PublishDir "..\publish"
+#define PublishDir "..\publish-framework"
 
 [Setup]
 ; AppId sürümler arasında DEĞİŞMEMELİ; yeni sürüm eskisinin üzerine kurulur.

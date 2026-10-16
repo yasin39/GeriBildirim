@@ -35,7 +35,7 @@
         </Border>
 
         <!-- SEKMELER -->
-        <TabControl x:Name="Sekmeler" Grid.Row="1">
+        <TabControl x:Name="Sekmeler" Grid.Row="1" SelectedIndex="1">
             <TabItem Header="Yeni Bildirim">
                 <views:GonderView />
             </TabItem>

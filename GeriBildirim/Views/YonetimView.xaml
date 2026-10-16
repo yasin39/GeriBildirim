@@ -115,7 +115,7 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="60" />
 
-                        <DataGridTemplateColumn Header="Durum" Width="120" SortMemberPath="DurumMetni">
+                        <DataGridTemplateColumn Header="Durum" Width="72" SortMemberPath="DurumMetni">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding DurumMetni}" FontWeight="SemiBold">
@@ -137,10 +137,9 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Kullanıcı" Binding="{Binding KullaniciAdSoyad}" Width="170" />
-                        <DataGridTextColumn Header="Proje" Binding="{Binding ProjeAdi}" Width="150" />
-                        <DataGridTextColumn Header="Modül" Binding="{Binding ModulAdi}" Width="120" />
-                        <DataGridTextColumn Header="Sayfa" Binding="{Binding SayfaAdi}" Width="160" />
+                        <DataGridTextColumn Header="Proje" Binding="{Binding ProjeAdi}" Width="90" />
+                        <DataGridTextColumn Header="Modül" Binding="{Binding ModulAdi}" Width="72" />
+                        <DataGridTextColumn Header="Sayfa" Binding="{Binding SayfaAdi}" Width="96" />
 
                         <DataGridTextColumn Header="Bildirim (Özet)" Binding="{Binding Ozet}" Width="*">
                             <DataGridTextColumn.ElementStyle>

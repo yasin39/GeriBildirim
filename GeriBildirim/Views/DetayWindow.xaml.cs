@@ -4,7 +4,7 @@ using GeriBildirim.Models;
 namespace GeriBildirim.Views;
 
 /// <summary>
-/// Seçilen geri bildirimin tüm alanlarını salt okunur gösteren pencere.
+/// Seçilen geri bildirimin görünür alanlarını salt okunur gösteren pencere.
 /// Kaydın durumunu değiştirmez.
 /// </summary>
 public partial class DetayWindow : Window
@@ -15,7 +15,6 @@ public partial class DetayWindow : Window
 
         Title = $"Geri Bildirim Detayı — #{kayit.Id}";
         ProjeText.Text = kayit.ProjeAdi;
-        KullaniciText.Text = kayit.KullaniciAdSoyad;
         TarihText.Text = kayit.KayitTarihi.ToString("dd.MM.yyyy HH:mm");
         ModulText.Text = kayit.ModulAdi;
         SayfaText.Text = kayit.SayfaAdi;

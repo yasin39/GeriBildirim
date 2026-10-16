@@ -29,10 +29,8 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Kullanıcı" Style="{StaticResource Etiket}" Margin="0,0,0,8" />
-            <TextBlock x:Name="KullaniciText" Grid.Row="0" Grid.Column="1" Margin="0,0,12,8" TextWrapping="Wrap" />
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="Tarih" Style="{StaticResource Etiket}" Margin="0,0,0,8" />
-            <TextBlock x:Name="TarihText" Grid.Row="0" Grid.Column="3" Margin="0,0,0,8" />
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Tarih" Style="{StaticResource Etiket}" Margin="0,0,0,8" />
+            <TextBlock x:Name="TarihText" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,0,0,8" />
 
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Modül" Style="{StaticResource Etiket}" Margin="0,0,0,8" />
             <TextBlock x:Name="ModulText" Grid.Row="1" Grid.Column="1" Margin="0,0,12,8" TextWrapping="Wrap" />
